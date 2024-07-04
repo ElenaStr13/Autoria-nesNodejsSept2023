@@ -1,11 +1,10 @@
-
 import { Max, Min } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { ECurrency } from '../modules/car/enum/currency.enum';
-import { EIsActive } from '../modules/car/enum/isActive.enum';
-import { EUkraineRegion } from '../modules/car/enum/region.enum';
-import { CreatedUpdatedModel } from './common/created-updated.model';
+import { ECurrency } from "../../modules/car/enum/currency.enum";
+import { EIsActive } from "../../modules/car/enum/isActive.enum";
+import { EUkraineRegion } from "../../modules/car/enum/region.enum";
+import { CreatedUpdatedModel } from "../common/created-updated.model";
 import { UserEntity } from './user.entity';
 
 @Entity('cars')

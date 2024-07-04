@@ -1,4 +1,4 @@
-import { ConfigStaticService } from "../../../configs/config.static";
+import { ConfigStaticService } from "../../../config/config.static";
 import { UserEntity } from '../../../database/entities/user.entity';
 import { UserResDto } from '../dto/res/user.res.dto';
 

@@ -1,46 +1,36 @@
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
-import { ArticleEntity } from "./article.entity";
-import { CommentEntity } from "./comment.entity";
-import { TableNameEnum } from "./enums/table-name.enum";
-import { FollowEntity } from "./follow.entity";
-import { LikeEntity } from "./like.entity";
-import { BaseModel } from "./models/base.model";
-import { RefreshTokenEntity } from "./refresh-token.entity";
+import { ERole } from "../../common/enum/role.enum";
+import { ETypeAccount } from "../../modules/user/enum/type-account.enum";
+import { CreatedUpdatedModel } from "../common/created-updated.model";
+import { CarEntity } from './car.entity';
 
+@Entity('user')
+export class UserEntity extends CreatedUpdatedModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-@Entity({ name: TableNameEnum.USERS })
-export class UserEntity extends BaseModel {
-  @Column('text')
-  name: string;
+  @Column({ type: 'text' })
+  userName: string;
 
-  @Column('text', { unique: true })
+  @Column({ type: 'text', unique: true })
   email: string;
 
-  @Column('text')
+  @Column({ type: 'text', unique: true })
+  telegram: string;
+
+  @Column({ type: 'enum', enum: ERole })
+  role: ERole;
+
+  @Column({ type: 'enum', enum: ETypeAccount, default: ETypeAccount.BASIC })
+  typeAccount: ETypeAccount;
+
+  @Column({ type: 'text' })
   password: string;
 
-  @Column('text', { nullable: true })
-  bio?: string;
+  @Column({ type: 'boolean', default: false })
+  block: boolean;
 
-  @Column('text', { nullable: true })
-  image?: string;
-
-  @OneToMany(() => RefreshTokenEntity, (entity) => entity.user)
-  refreshTokens?: RefreshTokenEntity[];
-
-  @OneToMany(() => ArticleEntity, (entity) => entity.user)
-  articles?: ArticleEntity[];
-
-  @OneToMany(() => LikeEntity, (entity) => entity.user)
-  likes?: LikeEntity[];
-
-  @OneToMany(() => CommentEntity, (entity) => entity.user)
-  comments?: LikeEntity[];
-
-  @OneToMany(() => FollowEntity, (entity) => entity.follower)
-  followers?: FollowEntity[];
-
-  @OneToMany(() => FollowEntity, (entity) => entity.following)
-  followings?: FollowEntity[];
+  @OneToMany(() => CarEntity, (entity) => entity.user)
+  cars: CarEntity[];
 }

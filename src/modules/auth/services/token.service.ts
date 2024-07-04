@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config/dist/config.service';
 import { JwtService } from '@nestjs/jwt';
 
-import { Config, JWTConfig } from '../../../configs/configs.type';
+import { Config, JWTConfig } from '../../../config/configs.type';
 import { TokenType } from "../enums/token-type.enum";
 import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 import { ITokenPair } from '../interfaces/token-pair.interface';

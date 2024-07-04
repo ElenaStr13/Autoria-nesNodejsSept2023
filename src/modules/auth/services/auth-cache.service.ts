@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config/dist/config.service';
 
-import { Config, JWTConfig } from "../../../configs/configs.type";
+import { Config, JWTConfig } from "../../../config/configs.type";
 import { RedisService } from "../../redis/redis.service";
 
 
