@@ -1,36 +1,45 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { IsOptional, IsString, Length, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-import { TransformHelper } from '../../../../common/helpers/transform.helper';
+import { IsAllowedRole } from '../../../../common/decorators/role-validator.dto';
+import { ERole } from '../../../../common/enum/role.enum';
+import { telegramRegex } from '../../../../common/regex/telegram.regex';
 
-export class BaseUserReqDto {
-  @IsOptional()
+export class UserCreateReqDto {
+  @Transform(({ value }) => value.trim().toLowerCase())
+  @MinLength(2)
+  @MaxLength(20)
   @IsString()
-  @Length(3, 50)
-  @Transform(TransformHelper.trim)
-  @Type(() => String)
-  name?: string;
+  userName: string;
 
-  @IsOptional()
+  @MinLength(3)
+  @Transform(({ value }) => value.trim())
   @IsString()
-  @Length(0, 300)
-  bio?: string;
+  @Matches(telegramRegex, {
+    message: 'Invalid telegram format. Example ( @example ).',
+  })
+  telegram: string;
 
-  @IsOptional()
+  @Transform(({ value }) => value.trim().toLowerCase())
   @IsString()
-  @Length(0, 3000)
-  image?: string;
-
-  @ApiProperty({ example: 'test@gmail.com' })
-  @IsString()
-  @Length(0, 300)
-  @Matches(/^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/)
+  @IsEmail()
+  @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: '123qwe!@#QWE' })
+  @Transform(({ value }) => value.trim().toLowerCase())
   @IsString()
-  @Length(0, 300)
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%_*#?&])[A-Za-z\d@$_!%*#?&]{8,}$/)
+  @IsAllowedRole({ message: 'Invalid role value' })
+  role: ERole;
+
+  @Transform(({ value }) => value.trim())
+  @IsString()
+  @IsNotEmpty()
   password: string;
 }

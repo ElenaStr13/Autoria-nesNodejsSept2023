@@ -1,46 +1,46 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from "./decorators/current-user.decotator";
-import { SkipAuth } from "./decorators/skip-auth.decorator";
-import { SignInReqDto } from "./dto/req/sign-in.req.dto";
-import { SignUpReqDto } from "./dto/req/sign-up.req.dto";
-import { AuthResDto } from "./dto/res/auth.res.dto";
-import { TokenPairResDto } from "./dto/res/token-pair.res.dto";
-import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
-import { IUserData } from "./interfaces/user-data.interface";
-import { AuthService } from './services/auth.service';
+import { UserCreateReqDto } from "../user/dto/req/base-user.req.dto";
+import { AuthService } from "./auth.service";
+import { LoginReqDto } from "./dto/req/login-req.dto";
+import { LoginResDto } from "./dto/res/login-res.dto";
+import { LogoutGuard } from "./guards/logout.guard";
+
+
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @SkipAuth()
-  @Post('sign-up')
-  public async singUp(@Body() dto: SignUpReqDto): Promise<AuthResDto> {
-    return await this.authService.singUp(dto);
-  }
-  @SkipAuth()
-  @Post('sign-in')
-  public async signIn(@Body() dto: SignInReqDto): Promise<AuthResDto> {
-    return await this.authService.singIn(dto);
+  @ApiOperation({ summary: 'Register new user' })
+  @Post('register')
+  async register(@Body() body: UserCreateReqDto): Promise<void> {
+    await this.authService.register(body);
   }
 
-  @SkipAuth()
-  @ApiBearerAuth()
-  @UseGuards(JwtRefreshGuard)
-  @ApiOperation({ summary: 'Refresh token pair' })
-  @Post('refresh')
-  public async refresh(
-    @CurrentUser() userData: IUserData,
-  ): Promise<TokenPairResDto> {
-    return await this.authService.refresh(userData);
+  @ApiOperation({ summary: 'Login user' })
+  @Post('login')
+  async login(@Body() body: LoginReqDto): Promise<LoginResDto> {
+    return await this.authService.login(body);
   }
 
+  @UseGuards(AuthGuard(), LogoutGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Sign out' })
-  @Post('sign-out')
-  public async signOut(@CurrentUser() userData: IUserData): Promise<void> {
-    return await this.authService.signOut(userData);
+  @ApiOperation({ summary: 'Logout' })
+  @Delete('logout')
+  async logout(): Promise<void> {
+    throw new HttpException('User logout', HttpStatus.OK);
   }
 }

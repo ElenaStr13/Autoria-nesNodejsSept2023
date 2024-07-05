@@ -1,14 +1,22 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from "@nestjs/config";
-import { APP_FILTER } from '@nestjs/core';
+//import { PostgresModule } from "./postgres/postgres.module";
+import { TypeOrmModule } from "@nestjs/typeorm";
 
-import { GlobalExceptionFilter } from "./common/http/global-exception.filter";
+import { AppConfigModule } from "./config/app/config.module";
+//import { APP_FILTER } from '@nestjs/core';
 import configuration from './config/configs';
+import { TypeOrmConfiguration } from "./config/postgres/type-orm-configuration";
+import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from './modules/auth/auth.module';
+import { ModelsModule } from "./modules/brand/models.module";
 import { CarModule } from "./modules/car/car.module";
-import { RedisModule } from "./modules/redis/redis.module";
+import { CurrencyModule } from "./modules/currency/currency.module";
+import { ManagerModule } from "./modules/manager/manager.module";
+import { S3Module } from "./modules/s3/s3.module";
+//import { RedisModule } from "./modules/redis/redis.module";
 import { UserModule } from './modules/user/user.module';
-import { PostgresModule } from "./postgres/postgres.module";
+
 
 
 @Module({
@@ -17,20 +25,20 @@ import { PostgresModule } from "./postgres/postgres.module";
       load: [configuration],
       isGlobal: true,
     }),
-    RedisModule,
+    TypeOrmModule.forRootAsync(TypeOrmConfiguration.config),
+    AppConfigModule,
+    UserModule,
     CarModule,
-    PostgresModule,
     AuthModule,
-    UserModule
+    ManagerModule,
+    AdminModule,
+    CurrencyModule,
+    S3Module,
+    ModelsModule,
   ],
 
   controllers: [],
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: GlobalExceptionFilter,
-    },
-  ],
+  providers: [],
 })
 
 export class AppModule {}

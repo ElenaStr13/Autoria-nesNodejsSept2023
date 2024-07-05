@@ -1,115 +1,48 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post, Put, UploadedFile, UseInterceptors
-} from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
-import {
-  ApiBearerAuth, ApiConsumes,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
-  ApiTags,
-  ApiUnauthorizedResponse
-} from "@nestjs/swagger";
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { ApiFile } from "../../common/decorators/api-file.decorator";
-import { CurrentUser } from "../auth/decorators/current-user.decotator";
-import { SkipAuth } from "../auth/decorators/skip-auth.decorator";
-import { IUserData } from "../auth/interfaces/user-data.interface";
-import { UpdateUserReqDto } from './dto/req/update-user.req.dto';
-import { UserResDto } from "./dto/res/user.res.dto";
-import { UserService } from './services/user.service';
+import { RoleDecorator } from '../../common/decorators/role.decorator';
+import { ERole } from '../../common/enum/role.enum';
+import { BlockGuard } from '../../common/guards/banned.guard';
+import { RoleGuard } from '../../common/guards/role.guard';
+import { UserUpdateReqDto } from "./dto/req/update-user.req.dto";
+import { UserDetailsResDto, UserListItemResponseDto } from "./dto/res/user-details-res.dto";
+import { UserResponseMapper } from './user.response.mapper';
+import { UserService } from './user.service';
 
-
+@ApiBearerAuth()
 @ApiTags('Users')
-@Controller('users')
+@UseGuards(AuthGuard(), RoleGuard, BlockGuard)
+@RoleDecorator(ERole.ADMIN)
+@Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {
-  }
+  constructor(private readonly userService: UserService) {}
 
-  @ApiBearerAuth()
-  @ApiForbiddenResponse({ description: 'Forbidden' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
-  @Get('me')
-  public async getMe(@CurrentUser() userData: IUserData): Promise<UserResDto> {
-    return await this.userService.getMe(userData);
+  @RoleDecorator(ERole.BUYER, ERole.SELLER)
+  @ApiOperation({ summary: 'Get list of users' })
+  @Get()
+  async getAllUsers(): Promise<UserListItemResponseDto[]> {
+    const result = await this.userService.getAllUsers();
+    return UserResponseMapper.toListDto(result);
   }
-
-  @ApiBearerAuth()
-  @ApiForbiddenResponse({ description: 'Forbidden' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
-  @Put('me')
-  public async updateMe(
-    @CurrentUser() userData: IUserData,
-    @Body() dto: UpdateUserReqDto,
-  ): Promise<UserResDto> {
-    return await this.userService.updateMe(userData, dto);
+  @RoleDecorator(ERole.BUYER, ERole.SELLER)
+  @ApiOperation({ summary: 'Update user' })
+  @Patch(':userId')
+  async updateUser(
+    @Param('userId') userId: string,
+    @Body() body: UserUpdateReqDto,
+  ): Promise<UserDetailsResDto> {
+    const result = await this.userService.updateUser(userId, body);
+    return UserResponseMapper.toDetailsDto(result);
   }
-
-  @ApiBearerAuth()
-  @ApiForbiddenResponse({ description: 'Forbidden' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
-  @Delete('me')
-  public async remove(
-    @CurrentUser() userData: IUserData,
-    @Param('id', ParseUUIDPipe) userId: string,
-  ): Promise<void> {
-    return await this.userService.remove(userId);
-  }
-
-  @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
-  @UseInterceptors(FileInterceptor('avatar'))
-  @ApiConsumes('multipart/form-data')
-  @ApiFile('avatar', false)
-  @Post('me/avatar')
-  public async uploadAvatar(
-    @CurrentUser() userData: IUserData,
-    @UploadedFile() avatar: Express.Multer.File,
-  ): Promise<void> {
-    await this.userService.uploadAvatar(userData, avatar);
-  }
-
-  @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
-  @Delete('me/avatar')
-  public async deleteAvatar(@CurrentUser() userData: IUserData): Promise<void> {
-    await this.userService.deleteAvatar(userData);
-  }
-
-  @SkipAuth()
-  @ApiNotFoundResponse({ description: 'Not Found' })
+  @RoleDecorator(ERole.BUYER, ERole.SELLER)
+  @ApiOperation({ summary: 'Get user by id' })
   @Get(':userId')
-  public async getById(
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ): Promise<UserResDto> {
-    return await this.userService.getById(userId);
-  }
-
-  @ApiBearerAuth()
-  @Post(':userId/follow')
-  public async follow(
-    @CurrentUser() userData: IUserData,
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ): Promise<void> {
-    await this.userService.follow(userData, userId);
-  }
-
-  @ApiBearerAuth()
-  @Delete(':userId/follow')
-  public async unfollow(
-    @CurrentUser() userData: IUserData,
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ): Promise<void> {
-    await this.userService.unfollow(userData, userId);
+  async getUserById(
+    @Param('userId') userId: string,
+  ): Promise<UserDetailsResDto> {
+    const result = await this.userService.getUserById(userId);
+    return UserResponseMapper.toDetailsDto(result);
   }
 }

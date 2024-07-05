@@ -1,9 +1,11 @@
-import { PickType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-import { BaseUserReqDto } from './base-user.req.dto';
-
-export class UpdateUserReqDto extends PickType(BaseUserReqDto, [
-  'bio',
-  'image',
-  'name',
-]) {}
+export class UserUpdateReqDto {
+  @Transform(({ value }) => value.trim().toLowerCase())
+  @MinLength(2)
+  @MaxLength(20)
+  @IsOptional()
+  @IsString()
+  userName?: string;
+}

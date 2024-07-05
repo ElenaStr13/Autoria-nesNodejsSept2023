@@ -1,13 +1,23 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisModule } from '@webeleon/nestjs-redis';
 
-import { FileStorageModule } from "../file-storage/file-storage.module";
-import { UserService } from './services/user.service';
+import { UserEntity } from "../../database/entities/user.entity";
+import { AuthModule } from '../auth/auth.module';
 import { UserController } from './user.controller';
+import { UserRepository } from './user.repository';
+import { UserService } from './user.service';
 
 @Module({
-  imports: [FileStorageModule],
+  imports: [
+    TypeOrmModule.forFeature([UserEntity]),
+    AuthModule,
+    RedisModule.forRoot({
+      url: 'redis://localhost:6379',
+    }),
+  ],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  providers: [UserService, UserRepository],
+  exports: [UserRepository],
 })
 export class UserModule {}

@@ -1,29 +1,44 @@
-import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
-import { JwtModule } from "@nestjs/jwt";
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisModule } from '@webeleon/nestjs-redis';
 
-import { RedisModule } from "../redis/redis.module";
-import { UserModule } from '../user/user.module';
+import { JwtConfigModule } from '../../config/jwt/config.module';
+import { JwtConfigService } from '../../config/jwt/configuration.service';
+import { UserEntity } from "../../database/entities/user.entity";
+import { UserRepository } from '../user/user.repository';
+import { UserService } from '../user/user.service';
 import { AuthController } from './auth.controller';
-import { JwtAccessGuard } from "./guards/jwt-access.guard";
-import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
-import { AuthService } from './services/auth.service';
-import { AuthCacheService } from "./services/auth-cache.service";
-import { TokenService } from "./services/token.service";
+import { AuthService } from './auth.service';
+import { BearerStrategy } from './bearer.strategy';
 
-@Module({
-  imports: [JwtModule, UserModule, RedisModule],
-  controllers: [AuthController],
-  providers: [
-  AuthService,
-  TokenService,
-  AuthCacheService,
-  {
-    provide: APP_GUARD,
-    useClass: JwtAccessGuard,
+const JwtFactory = (config: JwtConfigService) => ({
+  secret: config.secretKey,
+  signOptions: {
+    expiresIn: config.expiresIn,
   },
-    JwtRefreshGuard,
-],
-  exports:[],
+});
+
+const JwtRegistrationOptions = {
+  imports: [JwtConfigModule],
+  useFactory: JwtFactory,
+  inject: [JwtConfigService],
+};
+@Module({
+  imports: [
+    PassportModule.register({
+      defaultStrategy: 'bearer',
+      property: 'user',
+    }),
+    RedisModule.forRoot({
+      url: 'redis://localhost:6379',
+    }),
+    TypeOrmModule.forFeature([UserEntity]),
+    JwtModule.registerAsync(JwtRegistrationOptions),
+  ],
+  providers: [AuthService, BearerStrategy, UserRepository, UserService],
+  controllers: [AuthController],
+  exports: [PassportModule, AuthService],
 })
 export class AuthModule {}
